@@ -1,1 +1,0 @@
-# boostcamp-image-classification

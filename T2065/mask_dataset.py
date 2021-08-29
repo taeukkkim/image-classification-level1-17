@@ -19,19 +19,16 @@ def get_transforms(need=('train', 'val'), img_size=(512, 384), mean=(0.55800916,
     if 'train' in need:
         transformations['train'] = Compose([
             Resize(img_size[0], img_size[1], p=1.0),
-            CenterCrop(384,384),
-#             HorizontalFlip(p=0.5),
+            HorizontalFlip(p=0.5),
             ShiftScaleRotate(p=0.5),
-#             HueSaturationValue(hue_shift_limit=0.2, sat_shift_limit=0.2, val_shift_limit=0.2, p=0.5),
-#             RandomBrightnessContrast(brightness_limit=(-0.1, 0.1), contrast_limit=(-0.1, 0.1), p=0.5),
+            HueSaturationValue(hue_shift_limit=0.2, sat_shift_limit=0.2, val_shift_limit=0.2, p=0.5),
+            RandomBrightnessContrast(brightness_limit=(-0.1, 0.1), contrast_limit=(-0.1, 0.1), p=0.5),
             GaussNoise(p=0.5),
             Normalize(mean=mean, std=std, max_pixel_value=255.0, p=1.0),
             ToTensorV2(p=1.0),
         ], p=1.0)
-    if 'val' in need:
         transformations['val'] = Compose([
             Resize(img_size[0], img_size[1]),
-            CenterCrop(384,384),
             Normalize(mean=mean, std=std, max_pixel_value=255.0, p=1.0),
             ToTensorV2(p=1.0),
         ], p=1.0)
