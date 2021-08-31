@@ -122,7 +122,7 @@ class ViT(nn.Module):
         '''
         super().__init__()
         self.net = timm.create_model(f'{version}', pretrained=True)   
-        self.net.head = nn.Linear(in_features=768, out_features=num_classes, bias=True)
+        self.net.head = nn.Linear(in_features=self.net.head.in_features, out_features=num_classes, bias=True)
 
     def forward(self, x):
         return self.net(x)

@@ -7,7 +7,8 @@ import random
 import re
 from importlib import import_module
 from pathlib import Path
-from tqdm.notebook import tqdm, tqdm_notebook
+# from tqdm.notebook import tqdm, tqdm_notebook
+from tqdm import tqdm, tqdm_notebook
 from sklearn.metrics import f1_score
 
 import matplotlib.pyplot as plt
@@ -169,7 +170,7 @@ def train(data_dir, model_dir, args):
         loss_value = 0
         matches = 0
         f1_value = 0
-        for idx, train_batch in enumerate(tqdm_notebook(train_loader,leave=True)):
+        for idx, train_batch in enumerate(tqdm(train_loader,leave=True)):
             inputs, labels = train_batch
             inputs = inputs['image'].to(device)
             labels = labels.to(device)

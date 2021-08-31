@@ -2,22 +2,16 @@ python train.py \
          --epochs 30 \
          --dataset MaskSplitByProfileDataset \
          --augmentation get_transforms \
-         --resize 512 384 \
+         --resize 224 224 \
          --lr 0.00003 \
          --lr_decay_step 50 \
          --lr_gamma 0.7 \
          --batch_size 32 \
          --valid_batch_size 32 \
-         --model EfficientNet \
-         --model_version b3\
+         --model ViT \
+         --model_version vit_small_patch16_224\
          --optimizer Adam \
          --criterion focal\
          --log_interval 100\
-         --name EfficientNet_b3_0831_2
+         --name ViT_vit_small_patch16_224_0831
          
-
-# python inference.py \
-#          --batch_size 32 \  
-#          --resize 512 384 \ 
-#          --model EfficientNet \  
-#          --model_version b3 
