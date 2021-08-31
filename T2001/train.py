@@ -4,6 +4,7 @@ import json
 import multiprocessing
 import os
 import random
+import pickle
 import re
 from importlib import import_module
 from pathlib import Path
@@ -82,11 +83,10 @@ def increment_path(path, exist_ok=False):
         n = max(i) + 1 if i else 2
         return f"{path}{n}"
 
-
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
 
-    save_dir = increment_path(os.path.join(model_dir, args.name))
+    save_dir = increment_path(os.path.join(model_dir, args.name), args.exist_ok)
 
     # -- settings
     use_cuda = torch.cuda.is_available()
@@ -153,6 +153,18 @@ def train(data_dir, model_dir, args):
 
     best_val_acc = 0
     best_val_loss = np.inf
+    best_path = ''
+    if args.load_params:
+        best_path = f"{args.model_dir}/{args.model}"
+        if Path(best_path).exists():
+            model.load_state_dict(torch.load(f"{best_path}/best.pth"))
+            with open(f"{best_path}/best.pickle","rb") as fr:
+                best_list = pickle.load(fr)
+                best_val_acc = best_list[0]
+                best_val_loss = best_list[1]
+            print('load success')
+        else:
+            os.mkdir(best_path)
     for epoch in range(args.epochs):
         # train loop
         model.train()
@@ -221,6 +233,11 @@ def train(data_dir, model_dir, args):
             val_acc = np.sum(val_acc_items) / len(val_set)
             best_val_loss = min(best_val_loss, val_loss)
             if val_acc > best_val_acc:
+                if args.load_params:
+                    print(best_path)
+                    torch.save(model.state_dict(), f"{best_path}/best.pth")
+                    with open(f"{best_path}/best.pickle","wb") as fw:
+                        pickle.dump([best_val_acc, best_val_loss], fw)
                 print(f"New best model for val accuracy : {val_acc:4.2%}! saving the best model..")
                 torch.save(model.module.state_dict(), f"{save_dir}/best.pth")
                 best_val_acc = val_acc
@@ -258,6 +275,9 @@ if __name__ == '__main__':
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
     parser.add_argument('--name', default='exp', help='model save at {SM_MODEL_DIR}/{name}')
+
+    parser.add_argument('--load_params', type=bool, default=False, help='load best model params at {SM_MODEL_DIR}/{model}')
+    parser.add_argument('--exist_ok', type=bool, default=False, help='if you want to save last params')
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
