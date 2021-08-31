@@ -15,3 +15,9 @@ python train.py \
          --log_interval 100\
          --name EfficientNet_b3_0830
          
+
+# python inference.py \
+#          --batch_size 32 \  
+#          --resize 512 384 \ 
+#          --model EfficientNet \  
+#          --model_version b3 
