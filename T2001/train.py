@@ -93,7 +93,8 @@ def train(data_dir, model_dir, args):
     config.learning_rate = args.lr
 
     save_dir = increment_path(os.path.join(model_dir, args.name), args.exist_ok)
-
+    if not Path(save_dir).exists():
+        os.mkdir(save_dir)
     # -- settings
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
@@ -150,13 +151,13 @@ def train(data_dir, model_dir, args):
         lr=config.learning_rate,
         weight_decay=5e-4
     )
-    scheduler = CosineAnnealingLR(optimizer, T_max=100)
-    # scheduler = StepLR(optimizer, args.lr_decay_step, gamma=0.5)
+    # scheduler = CosineAnnealingLR(optimizer, T_max=100)
+    scheduler = StepLR(optimizer, args.lr_decay_step, gamma=0.5)
 
     # -- logging
     # logger = SummaryWriter(log_dir=save_dir)
-    with open(os.path.join(save_dir, 'config.json'), 'w', encoding='utf-8') as f:
-        json.dump(vars(args), f, ensure_ascii=False, indent=4)
+    # with open(os.path.join(save_dir, 'config.json'), 'w', encoding='utf-8') as f:
+    #    json.dump(vars(args), f, ensure_ascii=False, indent=4)
 
     best_val_acc = 0
     best_val_loss = np.inf
