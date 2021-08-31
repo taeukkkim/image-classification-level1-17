@@ -11,6 +11,10 @@ from torch.utils.data import Dataset, Subset, random_split
 from torchvision import transforms
 from torchvision.transforms import *
 
+import albumentations
+from albumentations import *
+from albumentations.pytorch import ToTensorV2
+
 IMG_EXTENSIONS = [
     ".jpg", ".JPG", ".jpeg", ".JPEG", ".png",
     ".PNG", ".ppm", ".PPM", ".bmp", ".BMP",
@@ -48,6 +52,28 @@ class AddGaussianNoise(object):
 
     def __repr__(self):
         return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
+
+
+def get_transforms(resize, mean, std):
+    need=('train', 'val')
+    transformations = {}
+    if 'train' in need:
+        transformations['train'] = Compose([
+            Resize(resize[0], resize[1], p=1.0),
+            HorizontalFlip(p=0.5),
+            ShiftScaleRotate(p=0.5),
+            # HueSaturationValue(hue_shift_limit=0.2, sat_shift_limit=0.2, val_shift_limit=0.2, p=0.5),
+            # RandomBrightnessContrast(brightness_limit=(-0.1, 0.1), contrast_limit=(-0.1, 0.1), p=0.5),
+            GaussNoise(p=0.5),
+            Normalize(mean=mean, std=std, max_pixel_value=255.0, p=1.0),
+            ToTensorV2(p=1.0),
+        ], p=1.0)
+        transformations['val'] = Compose([
+            Resize(resize[0], resize[1]),
+            Normalize(mean=mean, std=std, max_pixel_value=255.0, p=1.0),
+            ToTensorV2(p=1.0),
+        ], p=1.0)
+    return transformations
 
 
 class CustomAugmentation:
@@ -184,7 +210,7 @@ class MaskBaseDataset(Dataset):
         age_label = self.get_age_label(index)
         multi_class_label = self.encode_multi_class(mask_label, gender_label, age_label)
 
-        image_transform = self.transform(image)
+        image_transform = self.transform(image=np.array(image))
         return image_transform, multi_class_label
 
     def __len__(self):
@@ -297,17 +323,18 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
 class TestDataset(Dataset):
     def __init__(self, img_paths, resize, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246)):
         self.img_paths = img_paths
-        self.transform = transforms.Compose([
-            Resize(resize, Image.BILINEAR),
-            ToTensor(),
+        self.transform = Compose([
+            Resize(resize[0],resize[1]),
             Normalize(mean=mean, std=std),
-        ])
+            ToTensorV2(p=1.0),
+        ], p=1.0)
+
 
     def __getitem__(self, index):
         image = Image.open(self.img_paths[index])
 
         if self.transform:
-            image = self.transform(image)
+            image = self.transform(image=np.array(image))
         return image
 
     def __len__(self):
