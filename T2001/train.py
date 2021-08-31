@@ -237,7 +237,7 @@ def train(data_dir, model_dir, args):
                     print(best_path)
                     torch.save(model.state_dict(), f"{best_path}/best.pth")
                     with open(f"{best_path}/best.pickle","wb") as fw:
-                        pickle.dump([best_val_acc, best_val_loss], fw)
+                        pickle.dump([val_acc, best_val_loss], fw)
                 print(f"New best model for val accuracy : {val_acc:4.2%}! saving the best model..")
                 torch.save(model.module.state_dict(), f"{save_dir}/best.pth")
                 best_val_acc = val_acc

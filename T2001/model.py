@@ -2,6 +2,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from facenet_pytorch import InceptionResnetV1
+
+class InceptionResnet(InceptionResnetV1):
+    def __init__(self, num_classes=18, pretrained='vggface2'):
+        super().__init__()
+
 class MyModel(nn.Module):
     def __init__(self, num_classes):
 
