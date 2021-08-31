@@ -13,5 +13,5 @@ python train.py \
          --optimizer Adam \
          --criterion focal\
          --log_interval 100\
-         --name ViT_vit_base_patch16_224_in21k_0831
+         --name T2065/ViT_vit_base_patch16_224_in21k_0831
          
