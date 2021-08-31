@@ -323,17 +323,18 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
 class TestDataset(Dataset):
     def __init__(self, img_paths, resize, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246)):
         self.img_paths = img_paths
-        self.transform = transforms.Compose([
-            Resize(resize, Image.BILINEAR),
-            ToTensor(),
+        self.transform = Compose([
+            Resize(resize[0],resize[1]),
             Normalize(mean=mean, std=std),
-        ])
+            ToTensorV2(p=1.0),
+        ], p=1.0)
+
 
     def __getitem__(self, index):
         image = Image.open(self.img_paths[index])
 
         if self.transform:
-            image = self.transform(np.array(image))
+            image = self.transform(image=np.array(image))
         return image
 
     def __len__(self):

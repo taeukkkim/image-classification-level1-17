@@ -13,7 +13,7 @@ from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.optim.lr_scheduler import StepLR, 
+from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
@@ -134,8 +134,8 @@ def train(data_dir, model_dir, args):
 
     # -- model
     model_module = getattr(import_module("model"), args.model)  # default: BaseModel
-    
-    if ('EfficientNet' in model_module.__class__.__name__) or ('ViT' in model_module.__class__.__name__):
+
+    if args.model in ['EfficientNet', 'ViT', 'EfficientNet_v2']:
         model = model_module(
             num_classes=num_classes,
             version=args.model_version,
@@ -154,7 +154,7 @@ def train(data_dir, model_dir, args):
         lr=args.lr,
         weight_decay=5e-4
     )
-    scheduler = StepLR(optimizer, args.lr_decay_step, gamma=0.5)
+    scheduler = StepLR(optimizer, args.lr_decay_step, gamma=args.lr_gamma)
 
     # -- logging
     logger = SummaryWriter(log_dir=save_dir)
@@ -169,7 +169,7 @@ def train(data_dir, model_dir, args):
         loss_value = 0
         matches = 0
         f1_value = 0
-        for idx, train_batch in enumerate(tqdm(train_loader)):
+        for idx, train_batch in enumerate(tqdm(train_loader,leave=True)):
             inputs, labels = train_batch
             inputs = inputs['image'].to(device)
             labels = labels.to(device)
@@ -219,7 +219,7 @@ def train(data_dir, model_dir, args):
             figure = None
             for val_batch in val_loader:
                 inputs, labels = val_batch
-                inputs = inputs.to(device)
+                inputs = inputs['image'].to(device)
                 labels = labels.to(device)
 
                 outs = model(inputs)
@@ -267,11 +267,11 @@ if __name__ == '__main__':
     load_dotenv(verbose=True)
 
     # Data and model checkpoints directories
-    parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')--
+    parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
     parser.add_argument('--epochs', type=int, default=1, help='number of epochs to train (default: 1)')
     parser.add_argument('--dataset', type=str, default='MaskSplitByProfileDataset', help='dataset augmentation type (default: MaskBaseDataset)')
     parser.add_argument('--augmentation', type=str, default='get_transforms', help='data augmentation type (default: BaseAugmentation)')
-    parser.add_argument("--resize", nargs="+", type=list, default=[512, 384], help='resize size for image when training')
+    parser.add_argument("--resize", nargs="+", type=int, default=[512, 384], help='resize size for image when training')
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
     parser.add_argument('--valid_batch_size', type=int, default=64, help='input batch size for validing (default: 64)')
     parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
@@ -280,9 +280,10 @@ if __name__ == '__main__':
     parser.add_argument('--val_ratio', type=float, default=0.2, help='ratio for validaton (default: 0.2)')
     parser.add_argument('--criterion', type=str, default='cross_entropy', help='criterion type (default: cross_entropy)')
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
+    parser.add_argument('--lr_gamma', type=float, default=0.5, help='learning rate scheduler gamma (default: 0.5)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
     parser.add_argument('--name', default='exp', help='model save at {SM_MODEL_DIR}/{name}')
-    parser.add_argument('--model_version', type=str, default='b0', help='efficientnet version (default: b0)')
+    parser.add_argument('--model_version', type=str, default='b0', help='model version (default: b0)')
     
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
