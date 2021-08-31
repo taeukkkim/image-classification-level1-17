@@ -161,18 +161,14 @@ def train(data_dir, model_dir, args):
 
     best_val_acc = 0
     best_val_loss = np.inf
-    best_path = ''
     if args.load_params:
-        best_path = f"{args.model_dir}/{args.model}"
-        if Path(best_path).exists():
-            model.load_state_dict(torch.load(f"{best_path}/best.pth"))
-            with open(f"{best_path}/best.pickle","rb") as fr:
+        if Path(f"{save_dir}/best.pth").exists():
+            model.load_state_dict(torch.load(f"{save_dir}/best.pth"))
+            with open(f"{save_dir}/best.pickle","rb") as fr:
                 best_list = pickle.load(fr)
                 best_val_acc = best_list[0]
                 best_val_loss = best_list[1]
             print('load success')
-        else:
-            os.mkdir(best_path)
     wandb.watch(model)
     for epoch in range(args.epochs):
         # train loop
@@ -247,13 +243,12 @@ def train(data_dir, model_dir, args):
             if val_acc > best_val_acc:
                 if args.load_params:
                     print(best_path)
-                    torch.save(model.state_dict(), f"{best_path}/best.pth")
-                    with open(f"{best_path}/best.pickle","wb") as fw:
+                    torch.save(model.state_dict(), f"{save_dir}/best.pth")
+                    with open(f"{save_dir}/best.pickle","wb") as fw:
                         pickle.dump([val_acc, best_val_loss], fw)
                 print(f"New best model for val accuracy : {val_acc:4.2%}! saving the best model..")
-                torch.save(model.module.state_dict(), f"{save_dir}/best.pth")
                 best_val_acc = val_acc
-            torch.save(model.module.state_dict(), f"{save_dir}/last.pth")
+            torch.save(model.state_dict(), f"{save_dir}/last.pth")
             print(
                 f"[Val] acc : {val_acc:4.2%}, loss: {val_loss:4.2} || "
                 f"best acc : {best_val_acc:4.2%}, best loss: {best_val_loss:4.2}"
