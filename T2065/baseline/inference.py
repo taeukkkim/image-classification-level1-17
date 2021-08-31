@@ -5,7 +5,7 @@ from importlib import import_module
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
-from tqdm.notebook import tqdm
+from tqdm.notebook import tqdm, tqdm_notebook
 
 from dataset import TestDataset, MaskBaseDataset
 
@@ -62,7 +62,7 @@ def inference(data_dir, model_dir, output_dir, args):
     print("Calculating inference results..")
     preds = []
     with torch.no_grad():
-        for idx, images in enumerate(tqdm(loader,leave=True)):
+        for idx, images in enumerate(tqdm_notebook(loader,leave=True)):
             images = images['image'].to(device)
             pred = model(images)
             pred = pred.argmax(dim=-1)
