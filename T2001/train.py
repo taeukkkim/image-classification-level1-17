@@ -6,15 +6,17 @@ import os
 import random
 import pickle
 import re
+import wandb
+
 from importlib import import_module
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from torch.optim.lr_scheduler import StepLR
+from torch.optim.lr_scheduler import StepLR, CosineAnnealingLR
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 
 from dataset import MaskBaseDataset
 from loss import create_criterion
@@ -85,6 +87,10 @@ def increment_path(path, exist_ok=False):
 
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
+    wandb.init(project='image-classification', entity='decyma')
+
+    config = wandb.config
+    config.learning_rate = args.lr
 
     save_dir = increment_path(os.path.join(model_dir, args.name), args.exist_ok)
 
@@ -141,13 +147,14 @@ def train(data_dir, model_dir, args):
     opt_module = getattr(import_module("torch.optim"), args.optimizer)  # default: SGD
     optimizer = opt_module(
         filter(lambda p: p.requires_grad, model.parameters()),
-        lr=args.lr,
+        lr=config.learning_rate,
         weight_decay=5e-4
     )
-    scheduler = StepLR(optimizer, args.lr_decay_step, gamma=0.5)
+    scheduler = CosineAnnealingLR(optimizer, T_max=100)
+    # scheduler = StepLR(optimizer, args.lr_decay_step, gamma=0.5)
 
     # -- logging
-    logger = SummaryWriter(log_dir=save_dir)
+    # logger = SummaryWriter(log_dir=save_dir)
     with open(os.path.join(save_dir, 'config.json'), 'w', encoding='utf-8') as f:
         json.dump(vars(args), f, ensure_ascii=False, indent=4)
 
@@ -165,6 +172,7 @@ def train(data_dir, model_dir, args):
             print('load success')
         else:
             os.mkdir(best_path)
+    wandb.watch(model)
     for epoch in range(args.epochs):
         # train loop
         model.train()
@@ -194,9 +202,12 @@ def train(data_dir, model_dir, args):
                     f"Epoch[{epoch}/{args.epochs}]({idx + 1}/{len(train_loader)}) || "
                     f"training loss {train_loss:4.4} || training accuracy {train_acc:4.2%} || lr {current_lr}"
                 )
-                logger.add_scalar("Train/loss", train_loss, epoch * len(train_loader) + idx)
-                logger.add_scalar("Train/accuracy", train_acc, epoch * len(train_loader) + idx)
-
+                # logger.add_scalar("Train/loss", train_loss, epoch * len(train_loader) + idx)
+                # logger.add_scalar("Train/accuracy", train_acc, epoch * len(train_loader) + idx)
+                wandb.log({
+                    "train_loss": train_loss,
+                    "train_accuracy": train_acc
+                    })
                 loss_value = 0
                 matches = 0
 
@@ -246,14 +257,16 @@ def train(data_dir, model_dir, args):
                 f"[Val] acc : {val_acc:4.2%}, loss: {val_loss:4.2} || "
                 f"best acc : {best_val_acc:4.2%}, best loss: {best_val_loss:4.2}"
             )
-            logger.add_scalar("Val/loss", val_loss, epoch)
-            logger.add_scalar("Val/accuracy", val_acc, epoch)
-            logger.add_figure("results", figure, epoch)
+            # logger.add_scalar("Val/loss", val_loss, epoch)
+            # logger.add_scalar("Val/accuracy", val_acc, epoch)
+            # logger.add_figure("results", figure, epoch)
+            wandb.log({"val_loss": val_loss, "val_acc": val_acc})
+            wandb.log({"image": [wandb.Image(figure, caption="Label")]})
             print()
-
-
+  
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    
 
     from dotenv import load_dotenv
     import os
