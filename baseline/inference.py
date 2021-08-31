@@ -5,21 +5,29 @@ from importlib import import_module
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
+from tqdm import tqdm, tqdm_notebook
 
 from dataset import TestDataset, MaskBaseDataset
 
 
-def load_model(saved_model, num_classes, device):
+def load_model(saved_model, num_classes, version, device):
     model_cls = getattr(import_module("model"), args.model)
-    model = model_cls(
-        num_classes=num_classes
-    )
+    if args.model in ['EfficientNet', 'ViT', 'EfficientNet_v2']:
+        model = model_cls(
+            num_classes=num_classes,
+            version=version,
+        ).to(device)
+    else:
+        model = model_cls(
+            num_classes=num_classes
+        ).to(device)
+
 
     # tarpath = os.path.join(saved_model, 'best.tar.gz')
     # tar = tarfile.open(tarpath, 'r:gz')
     # tar.extractall(path=saved_model)
 
-    model_path = os.path.join(saved_model, 'best.pth')
+    model_path = os.path.join(saved_model, args.name, 'best.pth')
     model.load_state_dict(torch.load(model_path, map_location=device))
 
     return model
@@ -33,7 +41,7 @@ def inference(data_dir, model_dir, output_dir, args):
     device = torch.device("cuda" if use_cuda else "cpu")
 
     num_classes = MaskBaseDataset.num_classes  # 18
-    model = load_model(model_dir, num_classes, device).to(device)
+    model = load_model(model_dir, num_classes, args.model_version, device).to(device)
     model.eval()
 
     img_root = os.path.join(data_dir, 'images')
@@ -54,8 +62,8 @@ def inference(data_dir, model_dir, output_dir, args):
     print("Calculating inference results..")
     preds = []
     with torch.no_grad():
-        for idx, images in enumerate(loader):
-            images = images.to(device)
+        for idx, images in enumerate(tqdm(loader,leave=True)):
+            images = images['image'].to(device)
             pred = model(images)
             pred = pred.argmax(dim=-1)
             preds.extend(pred.cpu().numpy())
@@ -70,8 +78,10 @@ if __name__ == '__main__':
 
     # Data and model checkpoints directories
     parser.add_argument('--batch_size', type=int, default=1000, help='input batch size for validing (default: 1000)')
-    parser.add_argument('--resize', type=tuple, default=(96, 128), help='resize size for image when you trained (default: (96, 128))')
+    parser.add_argument('--resize', type=tuple,  default=(512, 384), help='resize size for image when you trained (default: (96, 128))')
     parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
+    parser.add_argument('--model_version', type=str, default='b0', help='model version (default: b0)')
+    parser.add_argument('--name', default='exp', help='model save at {SM_CHANNEL_MODEL}/{name}')
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_EVAL', '/opt/ml/input/data/eval'))
@@ -79,6 +89,7 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', type=str, default=os.environ.get('SM_OUTPUT_DATA_DIR', './output'))
 
     args = parser.parse_args()
+    print(args)
 
     data_dir = args.data_dir
     model_dir = args.model_dir
