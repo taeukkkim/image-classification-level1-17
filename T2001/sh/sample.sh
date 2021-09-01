@@ -8,6 +8,6 @@ python /opt/ml/image-classification-level1-17/T2001/train.py \
 --batch_size 32 \
 --valid_batch_size 32 \
 --optimizer Adam \
---log_interval 100 \
---model multilabel_dropout_IR \
---name MDIR_Adam
+--log_interval 10 \
+--model MyModelBaseIRV2 \
+--name MDIR_Adam_aasad

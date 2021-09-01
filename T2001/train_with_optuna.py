@@ -6,6 +6,8 @@ import os
 import random
 import pickle
 import re
+import optuna
+import joblib
 
 from importlib import import_module
 from pathlib import Path
@@ -13,6 +15,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from torch import optim
 from torch.optim.lr_scheduler import StepLR, CosineAnnealingLR
 from torch.utils.data import DataLoader
 # from torch.utils.tensorboard import SummaryWriter
@@ -84,14 +87,15 @@ def increment_path(path, exist_ok=False):
         n = max(i) + 1 if i else 2
         return f"{path}{n}"
 
-def train(data_dir, model_dir, args):
+def train(data_dir, model_dir, args, trial, cfg):
+
     seed_everything(args.seed)
     if args.wandb:
         import wandb
-        wandb.init(project='image-classification', entity='decyma')
+        wandb.init(project='image-classification', entity='decyma', allow_val_change=True)
 
         config = wandb.config
-        config.learning_rate = args.lr
+        config.learning_rate = cfg['lr']
 
     save_dir = increment_path(os.path.join(model_dir, args.name), args.exist_ok)
     if not Path(save_dir).exists():
@@ -102,9 +106,7 @@ def train(data_dir, model_dir, args):
 
     # -- dataset
     dataset_module = getattr(import_module("dataset"), args.dataset)  # default: BaseAugmentation
-    dataset = dataset_module(
-        data_dir=data_dir,
-    )
+    dataset = dataset_module(data_dir=data_dir)
     num_classes = dataset.num_classes  # 18
 
     # -- augmentation
@@ -139,22 +141,13 @@ def train(data_dir, model_dir, args):
 
     # -- model
     model_module = getattr(import_module("model"), args.model)  # default: BaseModel
-    model = model_module(
-        num_classes=num_classes
-    ).to(device)
+    model = model_module(num_classes=num_classes).to(device)
     model = torch.nn.DataParallel(model)
 
     # -- loss & metric
     criterion = create_criterion(args.criterion)  # default: cross_entropy
-    opt_module = getattr(import_module("torch.optim"), args.optimizer)  # default: SGD
-    optimizer = opt_module(
-        filter(lambda p: p.requires_grad, model.parameters()),
-        lr=args.lr,
-        weight_decay=5e-4
-    )
-
-    scheduler = StepLR(optimizer, args.lr_decay_step, gamma=0.5)
-
+    optimizer = cfg['optimizer'](model.parameters(), lr=cfg['lr'])
+    
     # -- logging
     if args.tensorboard:
         from torch.utils.tensorboard import SummaryWriter
@@ -174,7 +167,7 @@ def train(data_dir, model_dir, args):
             print('load success')
     if args.wandb:
         wandb.watch(model)
-    for epoch in range(args.epochs):
+    for epoch in range(1, cfg['epochs'] + 1):
         # train loop
         model.train()
         loss_value = 0
@@ -200,7 +193,7 @@ def train(data_dir, model_dir, args):
                 train_acc = matches / args.batch_size / args.log_interval
                 current_lr = get_lr(optimizer)
                 print(
-                    f"Epoch[{epoch}/{args.epochs}]({idx + 1}/{len(train_loader)}) || "
+                    f"Epoch[{epoch}/{cfg['epochs']}]({idx + 1}/{len(train_loader)}) || "
                     f"training loss {train_loss:4.4} || training accuracy {train_acc:4.2%} || lr {current_lr}"
                 )
                 if args.tensorboard:
@@ -213,8 +206,6 @@ def train(data_dir, model_dir, args):
                         })
                 loss_value = 0
                 matches = 0
-
-        scheduler.step()
 
         # val loop
         with torch.no_grad():
@@ -266,7 +257,8 @@ def train(data_dir, model_dir, args):
                 wandb.log({"val_loss": val_loss, "val_acc": val_acc})
                 wandb.log({"image": [wandb.Image(figure, caption="Label")]})
             print()
-  
+    return val_acc
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     
@@ -277,15 +269,12 @@ if __name__ == '__main__':
 
     # Data and model checkpoints directories
     parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
-    parser.add_argument('--epochs', type=int, default=1, help='number of epochs to train (default: 1)')
     parser.add_argument('--dataset', type=str, default='MaskBaseDataset', help='dataset augmentation type (default: MaskBaseDataset)')
     parser.add_argument('--augmentation', type=str, default='BaseAugmentation', help='data augmentation type (default: BaseAugmentation)')
     parser.add_argument("--resize", nargs="+", type=list, default=[256, 192], help='resize size for image when training')
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
     parser.add_argument('--valid_batch_size', type=int, default=1000, help='input batch size for validing (default: 1000)')
     parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
-    parser.add_argument('--optimizer', type=str, default='SGD', help='optimizer type (default: SGD)')
-    parser.add_argument('--lr', type=float, default=1e-3, help='learning rate (default: 1e-3)')
     parser.add_argument('--val_ratio', type=float, default=0.2, help='ratio for validaton (default: 0.2)')
     parser.add_argument('--criterion', type=str, default='cross_entropy', help='criterion type (default: cross_entropy)')
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
@@ -295,17 +284,34 @@ if __name__ == '__main__':
     parser.add_argument('--load_params', type=bool, default=False, help='load best model params at {SM_MODEL_DIR}/{model}')
     parser.add_argument('--exist_ok', type=bool, default=False, help='if you want to save last params')
     parser.add_argument('--cpu', type=bool, default=False, help='if you want to use cpu')
+    parser.add_argument('--tensorboard', type=bool, default=False, help='use tensorboard')
     parser.add_argument('--wandb', type=bool, default=False, help='use wandb')
-    parser.add_argument('--tensorboard', type=bool, default=True, help='use tensorboard')
+    parser.add_argument('--epochs', type=int, default=20, help='input optuna epoch size (default: 20)')
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
     parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_MODEL_DIR', './model'))
 
     args = parser.parse_args()
+    args.tensorboard = False
     print(args)
 
     data_dir = args.data_dir
     model_dir = args.model_dir
 
-    train(data_dir, model_dir, args)
+
+    def train_mnist(trial):
+        # optuna Setting
+        cfg = {
+            'epochs' : trial.suggest_int('n_epochs', 3, 5),
+            'lr' : trial.suggest_loguniform('lr', 1e-5, 1e-2),
+            'momentum': trial.suggest_uniform('momentum', 0.4, 0.99),
+            'optimizer': trial.suggest_categorical('optimizer',[optim.Adadelta, optim.AdamW, optim.SGD, optim.RMSprop, optim.Adam, optim.Adagrad])
+        }
+        return train(data_dir, model_dir, args, trial, cfg)
+      
+    study = optuna.create_study(direction='maximize') 
+    study.optimize(train_mnist, n_trials=args.epochs)
+    with open(f"/opt/ml/image-classification-level1-17/T2001/optuna/bestOptuna.pickle","wb") as fw:
+        pickle.dump([study.best_trial.value, study.best_trial.params], fw)
+    

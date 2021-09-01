@@ -64,6 +64,20 @@ class CustomAugmentation:
     def __call__(self, image):
         return self.transform(image)
 
+class MyAugmentation:
+    def __init__(self, resize, mean, std, **args):
+        self.transform = transforms.Compose([
+            RandomPerspective(distortion_scale=0.5),
+            CenterCrop(size=(320, 256)),
+            transforms.RandomRotation(20),
+            transforms.RandomHorizontalFlip(),
+            transforms.ColorJitter(brightness=(0.5, 1.5), contrast=(0.7, 1.3), saturation=(0.8, 1.2)),
+            ToTensor(),
+            Normalize(mean=mean, std=std)
+        ])
+
+    def __call__(self, image):
+        return self.transform(image)
 
 class MaskLabels(int, Enum):
     MASK = 0

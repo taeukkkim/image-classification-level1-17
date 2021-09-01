@@ -3,3 +3,4 @@ model
 __pycache__
 .env
 /sh/wandb
+/sh/nohup.out
