@@ -28,7 +28,7 @@ parser.add_argument('--multi', type=bool, default=False, help='multi output labe
 
 # Container environment
 parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
-parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_MODEL_DIR', './model/T2214'))
+parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_MODEL_DIR', './model'))
 
 args = parser.parse_args()
 print(args)
