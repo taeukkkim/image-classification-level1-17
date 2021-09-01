@@ -1,23 +1,17 @@
 python train.py \
-         --epochs 30 \
+         --epochs 10 \
          --dataset MaskSplitByProfileDataset \
          --augmentation get_transforms \
          --resize 512 384 \
-         --lr 0.00003 \
-         --lr_decay_step 50 \
-         --lr_gamma 0.7 \
+         --lr 0.0001 \
+         --lr_decay_step 2 \
+         --lr_gamma 0.5 \
          --batch_size 32 \
          --valid_batch_size 32 \
          --model EfficientNet \
-         --model_version b3\
+         --model_version b3_pruned\
          --optimizer Adam \
          --criterion focal\
          --log_interval 100\
-         --name EfficientNet_b3_0831_2
+         --name T2065/EfficientNet_b3_pruned_0831
          
-
-# python inference.py \
-#          --batch_size 32 \  
-#          --resize 512 384 \ 
-#          --model EfficientNet \  
-#          --model_version b3 
