@@ -99,6 +99,7 @@ def train(data_dir, model_dir, args):
     dataset_module = getattr(import_module("dataset"), args.dataset)  # default: BaseAugmentation
     dataset = dataset_module(
         data_dir=data_dir,
+        label=args.label
     )
     num_classes = dataset.num_classes  # 18
 
@@ -460,6 +461,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
     parser.add_argument('--epochs', type=int, default=1, help='number of epochs to train (default: 1)')
     parser.add_argument('--dataset', type=str, default='MaskSplitByProfileDataset', help='dataset augmentation type (default: MaskBaseDataset)')
+    parser.add_argument('--label', type=str, default='total', help='dataset label: (total, mask, age, gender) (default: total)')
     parser.add_argument('--augmentation', type=str, default='get_transforms', help='data augmentation type (default: BaseAugmentation)')
     parser.add_argument("--resize", nargs="+", type=int, default=[512, 384], help='resize size for image when training')
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
