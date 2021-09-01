@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Tuple, List
 
 import numpy as np
+import pandas as pd
 import torch
 from PIL import Image
 from torch.utils.data import Dataset, Subset, random_split
@@ -149,8 +150,12 @@ class MaskBaseDataset(Dataset):
     mask_labels = []
     gender_labels = []
     age_labels = []
+    # all_labels = [] # 추가
+    # indexs = [] # 추가
+    # groups = [] # 추가
 
-    def __init__(self, data_dir, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246), val_ratio=0.2):
+    # def __init__(self, data_dir, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246), val_ratio=0.2):
+    def __init__(self, data_dir, mean=None, std=None, val_ratio=0.2):    
         self.data_dir = data_dir
         self.mean = mean
         self.std = std
@@ -161,6 +166,7 @@ class MaskBaseDataset(Dataset):
         self.calc_statistics()
 
     def setup(self):
+        # cnt=0 #추가
         profiles = os.listdir(self.data_dir)
         for profile in profiles:
             if profile.startswith("."):  # "." 로 시작하는 파일은 무시합니다
@@ -183,6 +189,10 @@ class MaskBaseDataset(Dataset):
                 self.mask_labels.append(mask_label)
                 self.gender_labels.append(gender_label)
                 self.age_labels.append(age_label)
+                # self.all_labels.append(self.encode_multi_class(mask_label, gender_label, age_label)) # 추가
+                # self.indexs.append(cnt) # 추가
+                # self.groups.append(id) # 추가
+                # cnt += 1 # 추가
 
     def calc_statistics(self):
         has_statistics = self.mean is not None and self.std is not None
@@ -260,6 +270,13 @@ class MaskBaseDataset(Dataset):
         n_train = len(self) - n_val
         train_set, val_set = random_split(self, [n_train, n_val])
         return train_set, val_set
+        # df = pd.DataFrame({"indexs":self.indexs, "groups":self.groups, "labels":self.all_labels})
+
+        # train, valid = train_test_apart_stratify(df, group="groups", stratify="labels", test_size=self.val_ratio)
+        # train_index = train["indexs"].tolist()
+        # valid_index = valid["indexs"].tolist()
+
+        # return  [Subset(self, train_index), Subset(self, valid_index)]
 
 
 class MaskSplitByProfileDataset(MaskBaseDataset):
