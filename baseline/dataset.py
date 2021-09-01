@@ -335,18 +335,6 @@ class MaskSplitStratifyDataset(MaskBaseDataset):
         self.indices = defaultdict(list)
         super().__init__(data_dir, mean, std, val_ratio)
 
-    @staticmethod
-    def _split_profile(profiles, val_ratio):
-        length = len(profiles)
-        n_val = int(length * val_ratio)
-
-        val_indices = set(random.choices(range(length), k=n_val))
-        train_indices = set(range(length)) - val_indices
-        return {
-            "train": train_indices,
-            "val": val_indices
-        }
-
     def setup(self):
         cnt = 0 # 추가
         profiles = os.listdir(self.data_dir)
