@@ -78,10 +78,10 @@ if __name__ == '__main__':
 
     # Data and model checkpoints directories
     parser.add_argument('--batch_size', type=int, default=1000, help='input batch size for validing (default: 1000)')
-    parser.add_argument('--resize', nargs="+", type=int,  default=[512, 384], help='resize size for image when you trained (default: (512, 384))')
+    parser.add_argument('--resize', nargs="+", type=int,  default=[512, 384], help='resize size for image when you trained (default: [512, 384])')
     parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
     parser.add_argument('--model_version', type=str, default='b0', help='model version (default: b0)')
-    parser.add_argument('--name', default='exp', help='model save at {SM_CHANNEL_MODEL}/{name}')
+    parser.add_argument('--name', default='exp', help='model saved dir: {SM_CHANNEL_MODEL}/{name}')
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_EVAL', '/opt/ml/input/data/eval'))
