@@ -89,12 +89,22 @@ class FocalLabelSmoothingLoss(nn.Module):
         return torch.mean(torch.sum(-true_dist * focal_prop, dim=self.dim))
 
 
+class FocalLabelSmoothingLossWIthF1(nn.Module):
+    def __init__(self, weight=None, gamma=2., classes=18, smoothing=0.2, dim=-1):
+        self.focal_label = FocalLabelSmoothingLoss()
+        self.f1 = F1Loss()
+
+    def forward(self, pred, target):
+        return self.focal_label(pred, target) + self.f1(pred, target)
+
+
 _criterion_entrypoints = {
     'cross_entropy': nn.CrossEntropyLoss,
     'focal': FocalLoss,
     'label_smoothing': LabelSmoothingLoss,
     'f1': F1Loss,
     'focal_smoothing': FocalLabelSmoothingLoss,
+    'focal_smoothing_f1': FocalLabelSmoothingLossWIthF1,
 }
 
 
