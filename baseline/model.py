@@ -42,7 +42,7 @@ class Resnet18(nn.Module):
 
         self.net = timm.create_model('resnet18', pretrained=True)
         self.net.fc = nn.Linear(in_features=512, out_features=num_classes, bias=True)
-
+        
     def forward(self, x):
         return self.net(x)
 
@@ -172,6 +172,18 @@ class multilabel_dropout_IR(InceptionResnetV1):
         else:
             x = F.normalize(x, p=2, dim=1)
         return x
+
+class Resnet50(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = timm.create_model('resnet50', pretrained=True)
+        num_ftrs = self.model.fc.in_features
+        self.model.fc = nn.Linear(num_ftrs, num_classes)
+
+    def forward(self, x):
+        return self.model(x)
+
+
 
 # Custom Model Template
 class MyModel(nn.Module):
