@@ -221,6 +221,29 @@ class Resnet50(nn.Module):
         return self.model(x)
 
 
+class Resnet18_multi(nn.Module):
+    '''
+    multi-label classification model 
+    mask, gender, age =  Resnet18_multi(x)
+    https://discuss.pytorch.org/t/modify-resnet50-to-give-multiple-outputs/46905 참고
+    '''
+    def __init__(self, mask_num=3, gender_num=2, age_num=3):
+        super().__init__()
+        self.model = timm.create_model('resnet18', pretrained=True)
+        num_ftrs = self.model.fc.in_features
+        self.model.fc = nn.Identity()
+        self.model.fc1 = nn.Linear(num_ftrs, mask_num)
+        self.model.fc2 = nn.Linear(num_ftrs, gender_num)
+        self.model.fc3 = nn.Linear(num_ftrs, age_num)
+
+    def forward(self, x):
+        x = self.model(x)
+        mask_out = self.model.fc1(x)
+        gender_out = self.model.fc2(x)
+        age_out = self.model.fc3(x)
+        return mask_out, gender_out, age_out
+
+
 
 # Custom Model Template
 class MyModel(nn.Module):
