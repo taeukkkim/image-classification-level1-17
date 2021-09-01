@@ -1,0 +1,25 @@
+{
+    "seed": 42,
+    "epochs": 15,
+    "dataset": "MaskSplitStratifyDataset",
+    "label": "mask",
+    "augmentation": "get_transforms",
+    "resize": [
+        512,
+        384
+    ],
+    "batch_size": 32,
+    "valid_batch_size": 32,
+    "model": "EfficientNet",
+    "optimizer": "Adam",
+    "lr": 3e-05,
+    "val_ratio": 0.2,
+    "criterion": "focal",
+    "lr_decay_step": 50,
+    "lr_gamma": 0.5,
+    "log_interval": 100,
+    "name": "T2065/EfficientNet_b3_0901_mask",
+    "model_version": "b3",
+    "data_dir": "/opt/ml/input/data/train/images",
+    "model_dir": "./model"
+}
