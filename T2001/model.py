@@ -47,8 +47,6 @@ class multilabel_dropout_IR(nn.Module):
     def __init__(self, num_classes = 18):
         super().__init__()
         self.net = InceptionResnetV1(pretrained='casia-webface', classify=True)
-        for param in self.net.parameters():
-            param.requires_grad_(False)
         self.classifier1 = nn.Sequential(
             nn.Linear(10575, 8192),
             nn.ReLU(True),
