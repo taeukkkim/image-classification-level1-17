@@ -69,7 +69,7 @@ def inference(data_dir, model_dir, output_dir, args):
             preds.extend(pred.cpu().numpy())
 
     info['ans'] = preds
-    info.to_csv(os.path.join(output_dir, f'output.csv'), index=False)
+    info.to_csv(os.path.join(output_dir, f'{args.output_name}.csv'), index=False)
     print(f'Inference Done!')
 
 
@@ -82,6 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
     parser.add_argument('--model_version', type=str, default='b0', help='model version (default: b0)')
     parser.add_argument('--name', default='exp', help='model saved dir: {SM_CHANNEL_MODEL}/{name}')
+    parser.add_argument('--output_name', type=str, default='output', help='submission saved name: {name}')
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_EVAL', '/opt/ml/input/data/eval'))
