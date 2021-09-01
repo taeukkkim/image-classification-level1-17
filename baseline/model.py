@@ -6,13 +6,13 @@ import timm
 # install facenet_pytorch
 from facenet_pytorch import InceptionResnetV1
 
-def multilabel_dropout(in_feature, out_feature, p=0.5, bias=True):
+def multi_sample_dropout(in_feature, out_feature, p=0.5, bias=True):
     return nn.Sequential(
         nn.Dropout(p),
         nn.Linear(in_feature, out_feature, bias)
     )
 
-def multilabel_dropout_forward(x, dropout_layer, hidden_size=2):
+def multi_sample_dropout_forward(x, dropout_layer, hidden_size=2):
     return torch.mean(torch.stack([
         dropout_layer(x) for _ in range(hidden_size)]), dim=0)
 
@@ -25,9 +25,10 @@ class InceptionResnetV2(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-class MyModelBaseIRV2(InceptionResnetV2):
+class MyModelBaseIRV2(nn.Module):
     def __init__(self, num_classes=18):
         super().__init__()
+        self.net = timm.create_model('inception_resnet_v2', pretrained=True)
         for param in self.net.parameters():
             param.requires_grad_(False)
         self.logits = nn.Sequential(
@@ -37,11 +38,11 @@ class MyModelBaseIRV2(InceptionResnetV2):
             nn.Linear(4000, 2000),
             nn.ReLU()
         )
-        self.mldr = multilabel_dropout(2000, num_classes, 0.25)
+        self.mldr = multi_sample_dropout(2000, num_classes, 0.25)
     def forward(self, x):
         x = self.net(x)
         x = self.logits(x)
-        return multilabel_dropout_forward(x, self.mldr, 4)
+        return multi_sample_dropout_forward(x, self.mldr, 4)
 
 class BaseModel(nn.Module):
     def __init__(self, num_classes):
