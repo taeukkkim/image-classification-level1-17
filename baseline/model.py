@@ -6,6 +6,43 @@ import timm
 # install facenet_pytorch
 from facenet_pytorch import InceptionResnetV1
 
+def multilabel_dropout(in_feature, out_feature, p=0.5, bias=True):
+    return nn.Sequential(
+        nn.Dropout(p),
+        nn.Linear(in_feature, out_feature, bias)
+    )
+
+def multilabel_dropout_forward(x, dropout_layer, hidden_size=2):
+    return torch.mean(torch.stack([
+        dropout_layer(x) for _ in range(hidden_size)]), dim=0)
+
+class InceptionResnetV2(nn.Module):
+    def __init__(self, num_classes=18):
+        super().__init__()
+        self.net = timm.create_model('inception_resnet_v2', pretrained=True)
+        self.net.classif = nn.Linear(1536, num_classes)
+    
+    def forward(self, x):
+        return self.net(x)
+
+class MyModelBaseIRV2(InceptionResnetV2):
+    def __init__(self, num_classes=18):
+        super().__init__()
+        for param in self.net.parameters():
+            param.requires_grad_(False)
+        self.logits = nn.Sequential(
+            nn.Linear(1000, 4000),
+            nn.ReLU(),
+            nn.Dropout(),
+            nn.Linear(4000, 2000),
+            nn.ReLU()
+        )
+        self.mldr = multilabel_dropout(2000, num_classes, 0.25)
+    def forward(self, x):
+        x = self.net(x)
+        x = self.logits(x)
+        return multilabel_dropout_forward(x, self.mldr, 4)
+
 class BaseModel(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
