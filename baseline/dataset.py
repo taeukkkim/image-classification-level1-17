@@ -319,6 +319,71 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
     def split_dataset(self) -> List[Subset]:
         return [Subset(self, indices) for phase, indices in self.indices.items()]
 
+import pandas as pd
+from pandas_streaming.df import train_test_apart_stratify
+class MaskSplitStratifyDataset(MaskBaseDataset):
+    """
+        사람(profile)을 기준으로 나눕니다. 각 class 별로 Stratify하게 나눕니다.
+        train_test_apart_stratify를 사용합니다.
+    """
+
+    all_labels = [] # 추가
+    indexs = [] # 추가
+    groups = [] # 추가
+
+    def __init__(self, data_dir, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246), val_ratio=0.2):
+        self.indices = defaultdict(list)
+        super().__init__(data_dir, mean, std, val_ratio)
+
+    @staticmethod
+    def _split_profile(profiles, val_ratio):
+        length = len(profiles)
+        n_val = int(length * val_ratio)
+
+        val_indices = set(random.choices(range(length), k=n_val))
+        train_indices = set(range(length)) - val_indices
+        return {
+            "train": train_indices,
+            "val": val_indices
+        }
+
+    def setup(self):
+        cnt = 0 # 추가
+        profiles = os.listdir(self.data_dir)
+        for profile in profiles:
+            if profile.startswith("."):  # "." 로 시작하는 파일은 무시합니다
+                continue
+
+            img_folder = os.path.join(self.data_dir, profile)
+            for file_name in os.listdir(img_folder):
+                _file_name, ext = os.path.splitext(file_name)
+                if _file_name not in self._file_names:  # "." 로 시작하는 파일 및 invalid 한 파일들은 무시합니다
+                    continue
+
+                img_path = os.path.join(self.data_dir, profile, file_name)  # (resized_data, 000004_male_Asian_54, mask1.jpg)
+                mask_label = self._file_names[_file_name]
+
+                id, gender, race, age = profile.split("_")
+                gender_label = GenderLabels.from_str(gender)
+                age_label = AgeLabels.from_number(age)
+
+                self.image_paths.append(img_path)
+                self.mask_labels.append(mask_label)
+                self.gender_labels.append(gender_label)
+                self.age_labels.append(age_label)
+                self.all_labels.append(self.encode_multi_class(mask_label, gender_label, age_label)) # 추가
+                self.indexs.append(cnt) # 추가
+                self.groups.append(id) # 추가
+                cnt += 1 # 추가
+
+    def split_dataset(self) -> Tuple[Subset, Subset]:
+        df = pd.DataFrame({"indexs":self.indexs, "groups":self.groups, "labels":self.all_labels})
+
+        train, valid = train_test_apart_stratify(df, group="groups", stratify="labels", test_size=self.val_ratio)
+        train_index = train["indexs"].tolist()
+        valid_index = valid["indexs"].tolist()
+
+        return  [Subset(self, train_index), Subset(self, valid_index)]
 
 class TestDataset(Dataset):
     def __init__(self, img_paths, resize, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246)):
