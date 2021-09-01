@@ -339,3 +339,51 @@ class TestDataset(Dataset):
 
     def __len__(self):
         return len(self.img_paths)
+
+
+class MaskBaseDatasetMulti(MaskBaseDataset):
+    '''
+    image, mask, gender, age = MaskBaseDatasetMulti
+    MaskBaseDataset에서 mask, gender, age를 합친 원래 18개의 클래스를 출력하는 것이 아니라 
+    mask, gender, age의 3개, 2개, 3개의 클래스를 각각 출력합니다.
+    '''
+    def __init__(self, data_dir, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246), val_ratio=0.2):
+        super().__init__(data_dir, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246), val_ratio=0.2)
+
+    def __getitem__(self, index):
+        assert self.transform is not None, ".set_tranform 메소드를 이용하여 transform 을 주입해주세요"
+
+        image = self.read_image(index)
+        mask_label = self.get_mask_label(index)
+        gender_label = self.get_gender_label(index)
+        age_label = self.get_age_label(index)
+
+        if self.transform.__class__ == albumentations.Compose([]).__class__:
+            image_transform = self.transform(image=np.array(image)) # when use albumentations
+        else:
+            image_transform = self.transform(image)   # when use torchvision
+        return image_transform, mask_label, gender_label, age_label
+
+
+class MaskSplitByProfileDatasetMulti(MaskSplitByProfileDataset):
+    """
+    mask, gender, age의 3개, 2개, 3개의 클래스를 각각 출력하고 split할 때 random 이 아닌
+    사람(profile)을 기준으로 나눕니다.
+    """
+    def __init__(self, data_dir, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246), val_ratio=0.2):
+        self.indices = defaultdict(list)
+        super().__init__(data_dir, mean, std, val_ratio)
+
+    def __getitem__(self, index):
+        assert self.transform is not None, ".set_tranform 메소드를 이용하여 transform 을 주입해주세요"
+
+        image = self.read_image(index)
+        mask_label = self.get_mask_label(index)
+        gender_label = self.get_gender_label(index)
+        age_label = self.get_age_label(index)
+
+        if self.transform.__class__ == albumentations.Compose([]).__class__:
+            image_transform = self.transform(image=np.array(image)) # when use albumentations
+        else:
+            image_transform = self.transform(image)   # when use torchvision
+        return image_transform, mask_label, gender_label, age_label
