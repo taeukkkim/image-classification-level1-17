@@ -25,9 +25,10 @@ class InceptionResnetV2(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-class MyModelBaseIRV2(InceptionResnetV2):
+class MyModelBaseIRV2(nn.Module):
     def __init__(self, num_classes=18):
         super().__init__()
+        self.net = timm.create_model('inception_resnet_v2', pretrained=True)
         for param in self.net.parameters():
             param.requires_grad_(False)
         self.logits = nn.Sequential(
