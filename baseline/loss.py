@@ -65,11 +65,36 @@ class F1Loss(nn.Module):
         return 1 - f1.mean()
 
 
+class FocalLabelSmoothingLoss(nn.Module):
+    def __init__(self, weight=None, gamma=2., classes=18, smoothing=0.2, dim=-1):
+        nn.Module.__init__(self)
+        self.weight = weight
+        self.gamma = gamma
+
+        self.confidence = 1.0 - smoothing
+        self.smoothing = smoothing
+        self.cls = classes
+        self.dim = dim
+
+    def forward(self, pred, target):
+        log_prob = pred.log_softmax(dim=self.dim)
+        # focal
+        prob = torch.exp(log_prob)
+        focal_prop = ((1 - prob) ** self.gamma) * log_prob
+        # label smoothing
+        with torch.no_grad():
+            true_dist = torch.zeros_like(pred)
+            true_dist.fill_(self.smoothing / (self.cls - 1))
+            true_dist.scatter_(1, target.data.unsqueeze(1), self.confidence)
+        return torch.mean(torch.sum(-true_dist * focal_prop, dim=self.dim))
+
+
 _criterion_entrypoints = {
     'cross_entropy': nn.CrossEntropyLoss,
     'focal': FocalLoss,
     'label_smoothing': LabelSmoothingLoss,
-    'f1': F1Loss
+    'f1': F1Loss,
+    'focal_smoothing': FocalLabelSmoothingLoss,
 }
 
 
