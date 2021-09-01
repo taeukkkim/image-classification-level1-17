@@ -233,17 +233,39 @@ class Resnet18_multi(nn.Module):
         self.model = timm.create_model('resnet18', pretrained=True)
         num_ftrs = self.model.fc.in_features
         self.model.fc = nn.Identity()
-        self.model.fc1 = nn.Linear(num_ftrs, mask_num)
-        self.model.fc2 = nn.Linear(num_ftrs, gender_num)
-        self.model.fc3 = nn.Linear(num_ftrs, age_num)
+        self.fc1 = nn.Linear(num_ftrs, mask_num)
+        self.fc2 = nn.Linear(num_ftrs, gender_num)
+        self.fc3 = nn.Linear(num_ftrs, age_num)
 
     def forward(self, x):
         x = self.model(x)
-        mask_out = self.model.fc1(x)
-        gender_out = self.model.fc2(x)
-        age_out = self.model.fc3(x)
+        mask_out = self.fc1(x)
+        gender_out = self.fc2(x)
+        age_out = self.fc3(x)
         return mask_out, gender_out, age_out
 
+
+class EfficientNet_multi(nn.Module):
+    def __init__(self, version='v0', mask_num=3, gender_num=2, age_num=3):
+        '''
+        multi output efficientnet
+        verson: b0, b1, b1_pruned, b2, b2_pruned, b3, b3_pruned, b4...
+        '''
+        super().__init__()
+        self.net = timm.create_model(f'efficientnet_{version}', pretrained=True)
+        num_ftrs = self.net.classifier.in_features
+        self.net.classifier = nn.Identity()
+
+        self.classifier1 = nn.Linear(in_features=num_ftrs, out_features=mask_num, bias=True)
+        self.classifier2 = nn.Linear(in_features=num_ftrs, out_features=gender_num, bias=True)
+        self.classifier3 = nn.Linear(in_features=num_ftrs, out_features=age_num, bias=True)
+
+    def forward(self, x):
+        x = self.net(x)
+        mask_out = self.classifier1(x)
+        gender_out = self.classifier2(x)
+        age_out = self.classifier3(x)
+        return mask_out, gender_out, age_out
 
 
 # Custom Model Template
