@@ -1,19 +1,23 @@
 import os
 import random
-from collections import defaultdict
-from enum import Enum
-from typing import Tuple, List
-
-import numpy as np
 import torch
-from PIL import Image
-from torch.utils.data import Dataset, Subset, random_split
-from torchvision import transforms
-from torchvision.transforms import *
-
 import albumentations
-from albumentations import *
+
+import pandas as pd
+import numpy as np
+
+from enum import Enum
+from collections import defaultdict
+from PIL import Image
+from torchvision import transforms
+from typing import Tuple, List
 from albumentations.pytorch import ToTensorV2
+from torch.utils.data import Dataset, Subset, random_split
+
+from torchvision.transforms import *
+from albumentations import *
+
+from pandas_streaming.df import train_test_apart_stratify
 
 IMG_EXTENSIONS = [
     ".jpg", ".JPG", ".jpeg", ".JPEG", ".png",
@@ -457,9 +461,6 @@ class MaskSplitByProfileDataset(MaskBaseDataset_2):
 
     def split_dataset(self) -> List[Subset]:
         return [Subset(self, indices) for phase, indices in self.indices.items()]
-
-import pandas as pd
-from pandas_streaming.df import train_test_apart_stratify
 
 class MaskSplitStratifyDataset(MaskBaseDataset_2):
     """
