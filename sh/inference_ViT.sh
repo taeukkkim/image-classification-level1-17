@@ -1,4 +1,4 @@
-python inference.py \
+python ../inference.py \
          --batch_size 32 \
          --resize 224 224 \
          --model ViT \

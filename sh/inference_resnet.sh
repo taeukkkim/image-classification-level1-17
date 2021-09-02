@@ -6,14 +6,14 @@
 #          --output_name resnet18_0901_mask
 
 
-python inference.py \
+python ../inference.py \
          --batch_size 32 \
          --resize 512 384 \
          --model Resnet18 \
          --name T2065/Resnet18_0901_gender \
          --output_name resnet18_0901_gender
 
-python inference.py \
+python ../inference.py \
          --batch_size 32 \
          --resize 512 384 \
          --model Resnet18 \

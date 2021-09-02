@@ -16,7 +16,7 @@
 #          --name T2065/Resnet18_0901_mask
          
 
-python train.py \
+python ../train.py \
          --epochs 10 \
          --dataset MaskSplitByProfileDataset \
          --label gender\

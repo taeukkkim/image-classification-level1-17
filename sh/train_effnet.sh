@@ -1,4 +1,4 @@
-python train.py \
+python ../train.py \
          --epochs 10 \
          --dataset MaskSplitByProfileDataset \
          --augmentation get_transforms \

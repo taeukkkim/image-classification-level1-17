@@ -1,4 +1,4 @@
-python train_T2214.py \
+python ../train_T2214.py \
          --epochs 30 \
          --dataset MaskSplitByProfileDatasetMulti \
          --augmentation get_transforms \
