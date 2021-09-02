@@ -64,6 +64,7 @@ def get_transforms(resize, mean, std):
     if 'train' in need:
         transformations['train'] = Compose([
             Resize(resize[0], resize[1], p=1.0),
+            CenterCrop(256,256),
             HorizontalFlip(p=0.5),
             ShiftScaleRotate(p=0.5),
             # HueSaturationValue(hue_shift_limit=0.2, sat_shift_limit=0.2, val_shift_limit=0.2, p=0.5),
@@ -74,6 +75,7 @@ def get_transforms(resize, mean, std):
         ], p=1.0)
         transformations['val'] = Compose([
             Resize(resize[0], resize[1]),
+            CenterCrop(256,256),
             Normalize(mean=mean, std=std, max_pixel_value=255.0, p=1.0),
             ToTensorV2(p=1.0),
         ], p=1.0)
