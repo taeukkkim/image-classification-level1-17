@@ -82,7 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
     parser.add_argument('--model_version', type=str, default='b0', help='model version (default: b0)')
     parser.add_argument('--name', default='exp', help='model saved dir: {SM_CHANNEL_MODEL}/{name}')
-    parser.add_argument('--output_name', type=str, default='output', help='submission saved name: {name}')
+    parser.add_argument('--output_name', type=str, default='output', help='submission saved name: {output_name}')
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_EVAL', '/opt/ml/input/data/eval'))
