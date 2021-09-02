@@ -189,3 +189,4 @@ cython_debug/
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,jupyternotebooks,visualstudiocode,python
+baseline/eval_data/*/*.jpg
