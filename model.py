@@ -167,50 +167,41 @@ class ViT(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-class InceptionResnet(InceptionResnetV1):
-    def __init__(self, num_classes=18, pretrained='vggface2', classify=True):
+class InceptionResnet(nn.Module):
+    def __init__(self, num_classes=18, pretrained='vggface2'):
         super().__init__()
-
-class multilabel_dropout_IR(InceptionResnetV1):
-    def __init__(self, hidden_size = 2, num_classes = 18, pretrained = 'vggface2', classify = True):
-        super().__init__()
-        self.hidden_size = hidden_size
-        self.high_dropout = torch.nn.Dropout(1 / hidden_size)
-        self.logits = torch.nn.Linear(512, num_classes)
+        self.net = InceptionResnetV1(pretrained=pretrained)
+        self.net.logits = nn.Linear(512, num_classes)
 
     def forward(self, x):
-        """Calculate embeddings or logits given a batch of input image tensors.
-        Arguments:
-            x {torch.tensor} -- Batch of image tensors representing faces.
-        Returns:
-            torch.tensor -- Batch of embedding vectors or multinomial logits.
-        """
-        x = self.conv2d_1a(x)
-        x = self.conv2d_2a(x)
-        x = self.conv2d_2b(x)
-        x = self.maxpool_3a(x)
-        x = self.conv2d_3b(x)
-        x = self.conv2d_4a(x)
-        x = self.conv2d_4b(x)
-        x = self.repeat_1(x)
-        x = self.mixed_6a(x)
-        x = self.repeat_2(x)
-        x = self.mixed_7a(x)
-        x = self.repeat_3(x)
-        x = self.block8(x)
-        x = self.avgpool_1a(x)
-        x = self.dropout(x)
-        x = self.last_linear(x.view(x.shape[0], -1))
-        x = self.last_bn(x)
-        if self.classify:
-            x = torch.mean(torch.stack([
-            self.logits(self.high_dropout(x))
-            for _ in range(self.hidden_size)
-        ], dim=0), dim=0)
-        else:
-            x = F.normalize(x, p=2, dim=1)
-        return x
+        return self.net(x)
 
+class multilabel_dropout_IR(nn.Module):
+    def __init__(self, num_classes = 18):
+        super().__init__()
+        self.net = InceptionResnetV1(pretrained='casia-webface', classify=True)
+        self.classifier1 = nn.Sequential(
+            nn.Linear(10575, 8192),
+            nn.ReLU(True),
+            nn.Linear(8192, 8192),
+            nn.ReLU(True)
+        )
+        self.msdo1 = multi_sample_dropout(8192, 4096, 0.5)
+        self.classifier2 = nn.Sequential(
+            nn.Linear(4096, 1024),
+            nn.ReLU(True),
+            nn.Linear(1024, 2048),
+            nn.ReLU(True),
+        )
+        self.msdo2 = multi_sample_dropout(2048, num_classes, 0.5)
+
+    def forward(self, x):
+        x = self.net(x)
+        x = self.classifier1(x)
+        x = multi_sample_dropout_forward(x, self.msdo1, 2)
+        x = self.classifier2(x)
+        x = multi_sample_dropout_forward(x, self.msdo2, 2)
+        return x
 class Resnet50(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
