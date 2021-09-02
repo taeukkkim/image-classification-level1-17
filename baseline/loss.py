@@ -51,7 +51,6 @@ class F1Loss(nn.Module):
         assert y_true.ndim == 1
         y_true = F.one_hot(y_true, self.classes).to(torch.float32)
         y_pred = F.softmax(y_pred, dim=1)
-
         tp = (y_true * y_pred).sum(dim=0).to(torch.float32)
         tn = ((1 - y_true) * (1 - y_pred)).sum(dim=0).to(torch.float32)
         fp = ((1 - y_true) * y_pred).sum(dim=0).to(torch.float32)
@@ -93,7 +92,7 @@ class FocalLabelSmoothingLossWithF1(nn.Module):
     def __init__(self, weight=None, gamma=2., classes=18, smoothing=0.2, dim=-1):
         super().__init__()
         self.focal_label = FocalLabelSmoothingLoss()
-        self.f1 = F1Loss()
+        self.f1 = F1Loss(classes=classes)
 
     def forward(self, pred, target):
         return self.focal_label(pred, target) + self.f1(pred, target)
