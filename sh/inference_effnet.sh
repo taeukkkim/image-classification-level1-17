@@ -3,4 +3,4 @@ python ../inference.py \
          --resize 512 384 \
          --model EfficientNet \
          --model_version b3_pruned \
-         --name T2065/EfficientNet_b3_pruned_0831 
+         --name EfficientNet_b3_pruned_0831 

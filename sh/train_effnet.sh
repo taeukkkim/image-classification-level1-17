@@ -13,5 +13,5 @@ python ../train.py \
          --optimizer Adam \
          --criterion focal\
          --log_interval 100\
-         --name T2065/EfficientNet_b3_pruned_0831
+         --name EfficientNet_b3_pruned_0831
          
