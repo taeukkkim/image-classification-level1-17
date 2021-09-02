@@ -152,10 +152,7 @@ def train(data_dir, model_dir, args):
 
     # -- loss & metric
     criterion = create_criterion(args.criterion)  # default: cross_entropy
-    if args.optuna:
-        opt_module = args.optimizer
-    else:
-        opt_module = getattr(import_module("torch.optim"), args.optimizer)  # default: SGD
+    opt_module = getattr(import_module("torch.optim"), args.optimizer)  # default: SGD
     optimizer = opt_module(
         filter(lambda p: p.requires_grad, model.parameters()),
         lr=args.lr,
@@ -166,9 +163,8 @@ def train(data_dir, model_dir, args):
 
     # -- logging
     logger = SummaryWriter(log_dir=save_dir)
-    if not args.optuna:
-        with open(os.path.join(save_dir, 'config.json'), 'w', encoding='utf-8') as f:
-            json.dump(vars(args), f, ensure_ascii=False, indent=4)
+    with open(os.path.join(save_dir, 'config.json'), 'w', encoding='utf-8') as f:
+        json.dump(vars(args), f, ensure_ascii=False, indent=4)
 
     best_val_f1 = 0
     best_val_loss = np.inf
@@ -316,7 +312,7 @@ if __name__ == '__main__':
             # optuna Setting
             args.epochs = trial.suggest_int('n_epochs', 3, 5)
             args.lr = trial.suggest_loguniform('lr', 1e-5, 1e-2)
-            args.optimizer = trial.suggest_categorical('optimizer',[optim.Adadelta, optim.AdamW, optim.SGD, optim.RMSprop, optim.Adam, optim.Adagrad])
+            args.optimizer = trial.suggest_categorical('optimizer',['Adadelta', 'AdamW', 'SGD', 'RMSprop', 'Adam', 'Adagrad'])
             return train(data_dir, model_dir, args)
         study = optuna.create_study(direction='maximize') 
         study.optimize(train_optuna, n_trials=args.optuna_epochs)
