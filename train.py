@@ -87,6 +87,25 @@ def increment_path(path, exist_ok=False):
         n = max(i) + 1 if i else 2
         return f"{path}{n}"
 
+def rand_bbox(size, lam): # size : [Batch_size, Channel, Width, Height]
+    W = size[2] 
+    H = size[3] 
+    cut_rat = np.sqrt(1. - lam)  # 패치 크기 비율
+    cut_w = np.int(W * cut_rat)
+    cut_h = np.int(H * cut_rat)  
+
+   	# 패치의 중앙 좌표 값 cx, cy
+    cx = np.random.randint(W)
+    cy = np.random.randint(H)
+		
+    # 패치 모서리 좌표 값 
+    bbx1 = 0
+    bby1 = np.clip(cy - cut_h // 2, 0, H)
+    bbx2 = W
+    bby2 = np.clip(cy + cut_h // 2, 0, H)
+   
+    return bbx1, bby1, bbx2, bby2
+
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
 
@@ -180,10 +199,23 @@ def train(data_dir, model_dir, args):
 
             optimizer.zero_grad()
 
-            outs = model(inputs)
-            preds = torch.argmax(outs, dim=-1)
-            loss = criterion(outs, labels)
-
+            if args.beta > 0 and np.random.random()>0.5: # cutmix가 실행될 경우     
+                lam = np.random.beta(args.beta, args.beta)
+                rand_index = torch.randperm(inputs.size()[0]).to(device)
+                target_a = labels # 원본 이미지 label
+                target_b = labels[rand_index] # 패치 이미지 label       
+                bbx1, bby1, bbx2, bby2 = rand_bbox(inputs.size(), lam)
+                inputs[:, :, bbx1:bbx2, bby1:bby2] = inputs[rand_index, :, bbx1:bbx2, bby1:bby2]
+                lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (inputs.size()[-1] * inputs.size()[-2]))
+                outs = model(inputs)
+                loss = criterion(outs, target_a) * lam + criterion(outs, target_b) * (1. - lam) # 패치 이미지와 원본 이미지의 비율에 맞게 loss를 계산을 해주는 부분
+                _, preds= torch.max(outs, 1) 
+            
+            else: # cutmix가 실행되지 않았을 경우
+                outs= model(inputs) 
+                loss= criterion(outs, labels)
+                preds = torch.argmax(outs, dim=-1)
+            
             loss.backward()
             optimizer.step()
 
@@ -292,6 +324,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_version', type=str, default='b0', help='model version (default: b0)')
     parser.add_argument('--cpu', type=bool, default=False, help='if you want to use cpu')
     parser.add_argument('--tb', type=bool, default=True, help='use tensorboard')
+    parser.add_argument('--beta', type=float, default=-1.0, help='beta (default: -1)')
 
     # Optuna Setting
     parser.add_argument('--optuna', type=bool, default=False, help='use optuna')
