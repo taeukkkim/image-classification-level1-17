@@ -15,7 +15,8 @@ python train.py \
          --criterion focal_smoothing\
          --log_interval 100\
          --name T2065/EfficientNet_b7_focal_smoothing_0902_mask
-         
+
+        
 python train.py \
          --epochs 7 \
          --dataset MaskSplitStratifyDataset \
