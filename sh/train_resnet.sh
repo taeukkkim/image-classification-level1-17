@@ -15,7 +15,7 @@ python ../train.py \
          --log_interval 100\
          --name Resnet18_0901_gender
 
-python train.py \
+python ../train.py \
          --epochs 10 \
          --dataset MaskSplitByProfileDataset \
          --label age\
