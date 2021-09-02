@@ -214,8 +214,13 @@ def train(data_dir, model_dir, args):
             else: # cutmix가 실행되지 않았을 경우
                 outs= model(inputs) 
                 loss= criterion(outs, labels)
+                
+            if args.beta > 0: # cutmix가 실행 되었을 때 preds 설정
+                _, preds= torch.max(outs, 1) 
+
+            else:
                 preds = torch.argmax(outs, dim=-1)
-            
+
             loss.backward()
             optimizer.step()
 
