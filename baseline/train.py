@@ -276,7 +276,7 @@ def train(data_dir, model_dir, args):
                     )
 
             val_loss = val_loss_items / len(val_loader)
-            val_acc = val_acc_items / len(val_loader)
+            val_acc = val_acc_items / len(val_set)
             val_f1 = val_f1_items / len(val_loader)
 
             best_val_loss = min(best_val_loss, val_loss)
