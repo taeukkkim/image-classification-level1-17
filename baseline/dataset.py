@@ -281,8 +281,8 @@ class MaskBaseDataset_2(Dataset):
     mask_labels = []
     gender_labels = []
     age_labels = []
-
-
+    
+    
     def __init__(self, data_dir, label='total', mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246), val_ratio=0.2):
         self.data_dir = data_dir
         self.label = label
@@ -293,6 +293,15 @@ class MaskBaseDataset_2(Dataset):
         self.transform = None
         self.setup()
         self.calc_statistics()
+        if self.label == 'total':
+            self.num_classes = 18
+        elif self.label == 'mask':
+            self.num_classes = 3
+            print("mask", self.num_classes)
+        elif self.label == 'gender':
+            self.num_classes = 2
+        elif self.label == 'age':
+            self.num_classes = 3
 
     def setup(self):
         profiles = os.listdir(self.data_dir)
