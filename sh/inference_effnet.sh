@@ -1,4 +1,4 @@
-python inference.py \
+python ../inference.py \
          --batch_size 32 \
          --resize 512 384 \
          --model EfficientNet \
