@@ -14,9 +14,8 @@ profile_default/
 ipython_config.py
 
 # model, csv, event
-model
 events.*
-*.pth
+**/*.pth
 *.csv
 # Remove previous ipynb_checkpoints
 #   git rm -r .ipynb_checkpoints/
