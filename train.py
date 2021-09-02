@@ -5,7 +5,6 @@ import multiprocessing
 import os
 import random
 import re
-import pickle
 import optuna
 
 from importlib import import_module
@@ -293,32 +292,37 @@ if __name__ == '__main__':
     parser.add_argument('--model_version', type=str, default='b0', help='model version (default: b0)')
     parser.add_argument('--cpu', type=bool, default=False, help='if you want to use cpu')
     parser.add_argument('--tb', type=bool, default=True, help='use tensorboard')
-    parser.add_argument('--optuna', type=bool, default=False, help='use optuna')
-    parser.add_argument('--optuna_epochs', type=int, default=10, help='if you use optuna, set optuna epoch')
 
+    # Optuna Setting
+    parser.add_argument('--optuna', type=bool, default=False, help='use optuna')
+    parser.add_argument('--optuna_ntrials', type=int, default=10, help='if you use optuna, set optuna epoch')
+    parser.add_argument('--optuna_epoch_min', type=int, default=3, help='optuna epoch min')
+    parser.add_argument('--optuna_epoch_max', type=int, default=5, help='optuna epoch max')
+    parser.add_argument('--optuna_lr_min', type=float, default=1e-5, help='optuna lr min')
+    parser.add_argument('--optuna_lr_max', type=float, default=1e-2, help='optuna lr max')
+    parser.add_argument('--optuna_optimizer', nargs="+", type=float, default=['Adadelta', 'AdamW', 'SGD', 'RMSprop', 'Adam', 'Adagrad'], help='optuna optimizer list')
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
     parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_MODEL_DIR', './model'))
 
     args = parser.parse_args()
-    print(args)
 
     data_dir = args.data_dir
     model_dir = args.model_dir
-
     if args.optuna:
         def train_optuna(trial):
             # optuna Setting
-            args.epochs = trial.suggest_int('n_epochs', 3, 5)
-            args.lr = trial.suggest_loguniform('lr', 1e-5, 1e-2)
-            args.optimizer = trial.suggest_categorical('optimizer',['Adadelta', 'AdamW', 'SGD', 'RMSprop', 'Adam', 'Adagrad'])
+            args.epochs = trial.suggest_int('n_epochs', args.optuna_epoch_min, args.optuna_epoch_max)
+            args.lr = trial.suggest_loguniform('lr', args.optuna_lr_min, args.optuna_lr_max)
+            args.optimizer = trial.suggest_categorical('optimizer', args.optuna_optimizer)
+            print(args)
             return train(data_dir, model_dir, args)
         study = optuna.create_study(direction='maximize') 
-        study.optimize(train_optuna, n_trials=args.optuna_epochs)
-        print(f"Best F1 Val: {study.best_trial.value}\n Params\n {study.best_trial.params}\n Save at {model_dir}/bestOptuna.pickle")
-        with open(f"{model_dir}/bestOptuna.pickle","wb") as fw:
-            pickle.dump([study.best_trial.value, study.best_trial.params], fw)
-            
+        study.optimize(train_optuna, n_trials=args.optuna_ntrials)
+        print(f"Best F1 Val: {study.best_trial.value}\n Params\n {study.best_trial.params}\n Save at {model_dir}/optuna.json")
+        with open(os.path.join(model_dir, f'optuna_{args.name}_{study.best_trial.value}.json'), 'w', encoding='utf-8') as f:\
+            json.dump(study.best_trial.params, f, ensure_ascii=False, indent=4)
     else:
+        print(args)
         train(data_dir, model_dir, args)
