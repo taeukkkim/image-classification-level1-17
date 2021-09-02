@@ -246,7 +246,7 @@ class Resnet18_multi(nn.Module):
 
 
 class EfficientNet_multi(nn.Module):
-    def __init__(self, version='v0', mask_num=3, gender_num=2, age_num=3):
+    def __init__(self, version='b0', mask_num=3, gender_num=2, age_num=3):
         '''
         multi output efficientnet
         verson: b0, b1, b1_pruned, b2, b2_pruned, b3, b3_pruned, b4...
