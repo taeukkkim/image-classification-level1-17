@@ -65,6 +65,10 @@ def inference(data_dir, model_dir, output_dir, args):
     return info
 
 def split_save_img(info):
+    '''
+    추정한 결과로 eval_data 폴더와 그 안에 각 class별 폴더를 만들고 영상을 분류해줍니다.
+    정성적인 결과 보기 위한 용도 
+    '''
     save_dir = 'eval_data'
     if os.path.isdir(save_dir):
         shutil.rmtree(save_dir)
@@ -111,7 +115,9 @@ if __name__ == '__main__':
     os.makedirs(output_dir, exist_ok=True)
 
     info = inference(data_dir, model_dir, output_dir, args)
-    info_path = os.path.join(output_dir, f'{args.output_name}.csv')
-    info = pd.read_csv(info_path)
-    print(info.groupby('ans').size())
+
+    # info_path = os.path.join(output_dir, f'{args.output_name}.csv')
+    # info = pd.read_csv(info_path)
+    # print(info.groupby('ans').size())
+
     split_save_img(info)
