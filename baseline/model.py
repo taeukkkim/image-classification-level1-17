@@ -113,19 +113,19 @@ class EfficientNet(nn.Module):
         verson: b0, b1, b1_pruned, b2, b2_pruned, b3, b3_pruned, b4...
         '''
         super().__init__()
-        self.net = timm.create_model(f'efficientnet_{version}', pretrained=True)
-        if version in ['b0','b1','b1_pruned']:
-            in_features = 1280
-        elif version in ['b2','b2_pruned']:
-            in_features = 1408
-        elif version in ['b3','b3_pruned']:
-            in_features = 1536
-        elif version in ['b4']:
-            in_features = 1792
+        self.net = timm.create_model(f'{version}', pretrained=True)
+        # if version in ['b0','b1','b1_pruned']:
+        #     in_features = 1280
+        # elif version in ['b2','b2_pruned']:
+        #     in_features = 1408
+        # elif version in ['b3','b3_pruned']:
+        #     in_features = 1536
+        # elif version in ['b4']:
+        #     in_features = 1792
             
-        assert in_features is not None, "version에 올바른 EfficientNet version을 입력해주세요."     
+        # assert in_features is not None, "version에 올바른 EfficientNet version을 입력해주세요."     
 
-        self.net.classifier = nn.Linear(in_features=in_features, out_features=num_classes, bias=True)
+        self.net.classifier = nn.Linear(in_features=self.net.classifier.in_features, out_features=num_classes, bias=True)
 
     def forward(self, x):
         return self.net(x)

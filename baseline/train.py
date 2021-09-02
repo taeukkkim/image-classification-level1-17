@@ -475,7 +475,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr_gamma', type=float, default=0.5, help='learning rate scheduler gamma (default: 0.5)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
     parser.add_argument('--name', default='exp', help='model save at {SM_MODEL_DIR}/{name}')
-    parser.add_argument('--model_version', type=str, default='b0', help='model version (default: b0)')
+    parser.add_argument('--model_version', type=str, default='efficientnet_b0', help='model version (default: b0)')
     
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
