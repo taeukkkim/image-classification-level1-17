@@ -12,7 +12,7 @@ Code for solution in mask, gender, age classification of boostcamp Aistages
 - tensorboard==2.4.1
 - pandas==1.1.5
 - opencv-python==4.5.1.48
-- scikit-learn~=0.24.1
+- scikit-learn==0.24.1
 - matplotlib==3.2.1
 - timm==0.4.12
 - albumentations==1.0.3
@@ -111,7 +111,7 @@ eval/
 ```
 
 # Model
-Models are includeed like below
+Models are included like below
 * ResNet
 * EfficientNet
 * VGG
