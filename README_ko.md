@@ -1,5 +1,5 @@
 # K-AI image-classification 
-Eng readme - [link](README_en.md)
+Eng readme - [link](README.md)
 
 <center>
 <img src=https://img.shields.io/badge/pytorch-1.6.0-%23EE4C2C?logo=pytorch>  <img src=https://img.shields.io/badge/pandas-1.1.5-%23150458?logo=pandas>
