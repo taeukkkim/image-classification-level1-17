@@ -1,5 +1,5 @@
 # K-AI image-classification
-Kor readme - [link](README_en.md)  
+Kor readme - [link](https://github.com/boostcampaitech2/image-classification-level1-17/blob/develop/README_ko.md)  
 Code for solution in mask, gender, age classification of boostcamp Aistages
 
 
