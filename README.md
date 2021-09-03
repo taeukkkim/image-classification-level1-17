@@ -21,6 +21,27 @@
 
 # How to Use
 
+```
+├── FaceCrop.ipynb
+├── README.md
+├── dataset.py
+├── evaluation.py
+├── inference.py
+├── loss.py
+├── model
+├── model.py
+├── requirements.txt
+├── sh
+│   ├── inference_ViT.sh
+│   ├── inference_effnet.sh
+│   ├── inference_resnet.sh
+│   ├── train_ViT.sh
+│   ├── train_ViT_optuna.sh
+│   ├── train_effnet.sh
+│   ├── train_resnet.sh
+│   └── train_resnet_multi.sh
+└── train.py
+```
 ## 필수 설치
 
 - `pip install -r requirements.txt`
