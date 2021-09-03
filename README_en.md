@@ -1,6 +1,7 @@
-# pstage_01_image_classification
-
+# K-AI image-classification
 Code for solution in mask, gender, age classification of boostcamp Aistages
+
+![https://i.imgur.com/T9RxL0d.png](https://i.imgur.com/T9RxL0d.png)
 
 # Getting Started    
 ## Dependencies
@@ -107,11 +108,25 @@ eval/
 └── train.py
 ```
 
+# Model
+Models are includeed like below
+* ResNet
+* EfficientNet
+* VGG
+* Xception
+* ViT
+
 # Train
-We train models Effici
-
-
-- `SM_CHANNEL_TRAIN=[train image dir] SM_MODEL_DIR=[model saving dir] python train.py`
+We train models EfficientNet_b7. You can train using our train.py file. Simply you can train model our using sh/train_effnet.sh script. If you can need other option, change args in sh script.
+```
+sh ./sh/train_effnet.sh
+```
 
 # Inference
-- `SM_CHANNEL_EVAL=[eval image dir] SM_CHANNEL_MODEL=[model saved dir] SM_OUTPUT_DATA_DIR=[inference output dir] python inference.py`
+If you finish training model. You can create output.csv file using inference.py. We give sample inference_effnet.sh script.
+```
+sh ./sh/inference_effnet.sh
+```
+
+# Evaluation
+If you have ground-truth of evaluation dataset. you can evaluate using evaluation.py file. 
