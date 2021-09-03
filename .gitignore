@@ -15,7 +15,7 @@ ipython_config.py
 
 # model, csv, event
 events.*
-*.pth
+**/*.pth
 *.csv
 # Remove previous ipynb_checkpoints
 #   git rm -r .ipynb_checkpoints/
@@ -189,3 +189,4 @@ cython_debug/
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,jupyternotebooks,visualstudiocode,python
+baseline/tmp.sh
