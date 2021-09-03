@@ -21,10 +21,6 @@
 
 # How to Use
 
-<center><img src="https://i.imgur.com/UumsqOE.png" alt="My Image"></center>
-
----
-
 ## 필수 설치
 
 - `pip install -r requirements.txt`
