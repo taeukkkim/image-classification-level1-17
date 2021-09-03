@@ -1,5 +1,7 @@
 # K-AI image-classification
+Kor readme - [link](README_en.md)  
 Code for solution in mask, gender, age classification of boostcamp Aistages
+
 
 ![https://i.imgur.com/T9RxL0d.png](https://i.imgur.com/T9RxL0d.png)
 
