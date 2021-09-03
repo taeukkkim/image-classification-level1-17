@@ -266,6 +266,7 @@ class MaskBaseDataset(Dataset):
 
 class MaskBaseDataset_2(Dataset):
     num_classes = 3 * 2 * 3
+    
 
     _file_names = {
         "mask1": MaskLabels.MASK,
@@ -293,6 +294,14 @@ class MaskBaseDataset_2(Dataset):
         self.transform = None
         self.setup()
         self.calc_statistics()
+        if self.label == 'total':
+            self.num_classes == 18
+        elif self.label == 'mask':
+            self.num_classes == 3
+        elif self.label == 'gender':
+            self.num_classes == 2
+        elif self.label == 'age':
+            self.num_classes == 3
 
     def setup(self):
         profiles = os.listdir(self.data_dir)
@@ -473,9 +482,9 @@ class MaskSplitStratifyDataset(MaskBaseDataset_2):
     indexs = [] # 추가
     groups = [] # 추가
 
-    def __init__(self, data_dir, label='total', mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246), val_ratio=0.2):
+    def __init__(self, data_dir,  label='total', mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246), val_ratio=0.2):
         self.indices = defaultdict(list)
-        super().__init__(data_dir, label, mean, std, val_ratio)
+        super().__init__(data_dir,  label, mean, std, val_ratio)
 
     def setup(self):
         cnt = 0 # 추가
